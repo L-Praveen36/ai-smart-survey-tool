@@ -9,32 +9,34 @@ const SurveyBuilder = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleGenerateSurvey = async () => {
-    if (!title || !description || !prompt) {
-      alert('Please fill in all fields');
-      return;
-    }
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    setLoading(true);
+const handleGenerateSurvey = async () => {
+  if (!title || !description || !prompt) {
+    alert('Please fill in all fields');
+    return;
+  }
 
-    try {
-      const response = await axios.post(
-        'http://localhost:8000/api/surveys/generate-from-prompt',
-        {
-          prompt,
-          num_questions: numQuestions,
-          survey_title: title,
-          survey_description: description,
-        }
-      );
-      setQuestions(response.data.questions || []);
-    } catch (error) {
-      console.error('Error generating survey:', error);
-      alert('Survey generation failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/surveys/generate-from-prompt`,
+      {
+        prompt,
+        num_questions: numQuestions,
+        survey_title: title,
+        survey_description: description,
+      }
+    );
+
+    setQuestions(response.data.questions || []);
+  } catch (error) {
+    console.error('Error generating survey:', error);
+    alert('Survey generation failed.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-6 border border-gray-100">
