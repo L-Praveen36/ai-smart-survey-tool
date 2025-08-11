@@ -10,7 +10,8 @@ app = FastAPI(title="AI Smart Survey Tool")
 # CORS setup
 origins = [
     "http://localhost:5173",                    # Local frontend (Vite dev server)
-    "https://ai-smart-survey-tool.vercel.app",     # Replace with your actual Vercel domain after first deploy
+    "https://ai-smart-survey-tool.vercel.app",
+    "https://ai-smart-survey-tool-mu.vercel.app",     # Replace with your actual Vercel domain after first deploy
 ]
 
 app.add_middleware(
