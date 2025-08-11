@@ -1,26 +1,21 @@
 FROM python:3.10-slim
 
-# Install system dependencies
+# Install system dependencies needed for PyAudio
 RUN apt-get update && apt-get install -y \
     gcc \
     portaudio19-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set work directory
 WORKDIR /app
 
+# Copy requirements from backend folder
+COPY backend/requirements.txt ./requirements.txt
+
 # Install Python dependencies
-COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy all backend code into container
+COPY backend/ ./
 
-# Expose the port Render will use
-EXPOSE 10000
-
-# Run migrations before starting (optional, uncomment if needed)
-# CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 10000
-
-# Start FastAPI app
+# Start the app using Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
