@@ -8,9 +8,14 @@ from .models import survey, question, response, user, enumerator
 app = FastAPI(title="AI Smart Survey Tool")
 
 # CORS setup
+origins = [
+    "http://localhost:5173",                    # Local frontend (Vite dev server)
+    "https://ai-smart-survey-tool.vercel.app",     # Replace with your actual Vercel domain after first deploy
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

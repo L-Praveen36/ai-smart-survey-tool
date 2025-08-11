@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+
+// Define types for survey data
+interface Question {
+  id: number;
+  question: string;
+  type: string;
+  options?: string[];
+}
+
+interface Survey {
+  success?: boolean;
+  questions: Question[];
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const SurveyInterface = () => {
-  const [promptData, setPromptData] = useState('');
-  const [survey, setSurvey] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [promptData, setPromptData] = useState<string>('');
+  const [survey, setSurvey] = useState<Survey | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleGenerateSurvey = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/survey', {
+      const response = await fetch(`${API_BASE_URL}/api/survey`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -23,7 +38,7 @@ const SurveyInterface = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: Survey = await response.json();
 
       if (data.success) {
         setSurvey(data);
@@ -64,12 +79,12 @@ const SurveyInterface = () => {
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-2">Generated Survey</h3>
           <ul className="space-y-3">
-            {survey.questions.map((q) => (
+            {survey.questions.map((q: Question) => (
               <li key={q.id} className="p-3 border rounded bg-gray-50">
                 <strong>Q{q.id}:</strong> {q.question} ({q.type})
                 {q.options && (
                   <ul className="ml-6 list-disc mt-1">
-                    {q.options.map((opt, idx) => (
+                    {q.options.map((opt: string, idx: number) => (
                       <li key={idx}>{opt}</li>
                     ))}
                   </ul>
