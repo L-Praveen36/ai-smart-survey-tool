@@ -1,4 +1,4 @@
-import SurveyInterface from './components/SurveyInterface';
+import SurveyInterface from './components/SurveyInterface.tsx';
 
 function App() {
   return (

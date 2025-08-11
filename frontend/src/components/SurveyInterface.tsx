@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-// Define types for survey data
 interface Question {
   id: number;
   question: string;
@@ -28,18 +27,13 @@ const SurveyInterface = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/survey`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ promptData }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data: Survey = await response.json();
-
       if (data.success) {
         setSurvey(data);
       } else {
@@ -54,40 +48,63 @@ const SurveyInterface = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 border rounded-lg shadow bg-white">
-      <h2 className="text-2xl font-bold mb-4 text-center">AI Survey Generator</h2>
+    <div className="max-w-2xl mx-auto mt-10 p-6 border border-gray-200 rounded-xl shadow-lg bg-white">
+      <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+        🧠 AI Survey Generator
+      </h2>
 
+      {/* Prompt Input */}
       <textarea
-        className="w-full p-3 border rounded mb-4"
+        className="w-full p-4 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
         rows={4}
-        placeholder="Enter prompt or description for your survey..."
+        placeholder="Enter a prompt or description for your survey..."
         value={promptData}
         onChange={(e) => setPromptData(e.target.value)}
       />
 
+      {/* Generate Button */}
       <button
         onClick={handleGenerateSurvey}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        className={`w-full py-3 rounded-lg font-semibold transition duration-200 ${
+          loading
+            ? 'bg-blue-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700 text-white'
+        }`}
         disabled={loading}
       >
         {loading ? 'Generating...' : 'Generate Survey'}
       </button>
 
-      {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
+      {/* Error */}
+      {error && <p className="mt-4 text-red-500 text-center font-medium">{error}</p>}
 
+      {/* Generated Survey */}
       {survey && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">Generated Survey</h3>
-          <ul className="space-y-3">
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-4 text-gray-800">
+            📋 Generated Survey
+          </h3>
+          <ul className="space-y-4">
             {survey.questions.map((q: Question) => (
-              <li key={q.id} className="p-3 border rounded bg-gray-50">
-                <strong>Q{q.id}:</strong> {q.question} ({q.type})
+              <li
+                key={q.id}
+                className="p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm"
+              >
+                <p className="font-medium">
+                  <span className="text-blue-600">Q{q.id}:</span> {q.question}{' '}
+                  <span className="text-sm text-gray-500">({q.type})</span>
+                </p>
                 {q.options && (
-                  <ul className="ml-6 list-disc mt-1">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {q.options.map((opt: string, idx: number) => (
-                      <li key={idx}>{opt}</li>
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm text-gray-700"
+                      >
+                        {opt}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </li>
             ))}

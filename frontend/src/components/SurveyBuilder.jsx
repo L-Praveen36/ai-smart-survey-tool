@@ -37,23 +37,31 @@ const SurveyBuilder = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-xl mt-6">
-      <h2 className="text-2xl font-bold mb-4 text-center">🧠 AI Survey Builder</h2>
+    <div className="p-6 max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-6 border border-gray-100">
+      <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
+        🧠 AI Survey Builder
+      </h2>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Survey Title</label>
+      {/* Title */}
+      <div className="mb-5">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Survey Title
+        </label>
         <input
-          className="w-full px-4 py-2 border rounded-lg"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Customer Satisfaction Survey"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Survey Description</label>
+      {/* Description */}
+      <div className="mb-5">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Survey Description
+        </label>
         <textarea
-          className="w-full px-4 py-2 border rounded-lg"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -61,21 +69,27 @@ const SurveyBuilder = () => {
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">AI Prompt</label>
+      {/* AI Prompt */}
+      <div className="mb-5">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          AI Prompt
+        </label>
         <input
-          className="w-full px-4 py-2 border rounded-lg"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="e.g. Generate questions for an employee engagement survey"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Number of Questions</label>
+      {/* Number of Questions */}
+      <div className="mb-6">
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Number of Questions
+        </label>
         <input
           type="number"
-          className="w-full px-4 py-2 border rounded-lg"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={numQuestions}
           onChange={(e) => setNumQuestions(Number(e.target.value))}
           min={1}
@@ -83,20 +97,24 @@ const SurveyBuilder = () => {
         />
       </div>
 
+      {/* Generate Button */}
       <button
         onClick={handleGenerateSurvey}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold disabled:opacity-50"
         disabled={loading}
       >
         {loading ? 'Generating...' : 'Generate Survey'}
       </button>
 
+      {/* Generated Questions */}
       {questions.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold mb-2">📝 Generated Questions:</h3>
-          <ul className="list-disc pl-5">
+        <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 className="text-xl font-semibold mb-3 text-gray-800">
+            📝 Generated Questions:
+          </h3>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700">
             {questions.map((q, idx) => (
-              <li key={idx} className="mb-1">{q}</li>
+              <li key={idx}>{q}</li>
             ))}
           </ul>
         </div>
@@ -106,4 +124,3 @@ const SurveyBuilder = () => {
 };
 
 export default SurveyBuilder;
-
