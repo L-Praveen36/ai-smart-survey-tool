@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
+from pydantic import BaseModel
 
 from ..database import get_db
 from ..models.survey import Survey
@@ -10,6 +11,15 @@ from ..schemas import SurveyCreateRequest, SurveyResponse, AdaptiveQuestionRespo
 from ..services import nss_service, llm_service, analytics_service
 
 router = APIRouter()
+
+# -------------------------
+# Pydantic model for prompt
+# -------------------------
+class SurveyPromptPayload(BaseModel):
+    prompt: str
+    num_questions: int = 5
+    survey_title: str = "AI Survey"
+    survey_description: str = "Generated using LLM"
 
 # -----------------------------------------
 # Create Survey (Custom, NSS, AI-Generated)
@@ -31,7 +41,7 @@ def create_survey(payload: SurveyCreateRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_survey)
 
-        # Auto-add questions from NSS template
+        # Auto-add NSS template questions
         if payload.survey_type == "nss" and payload.nss_template_type:
             nss_questions = nss_service.get_questions_from_template(payload.nss_template_type)
             for q in nss_questions:
@@ -69,20 +79,22 @@ def get_survey(survey_id: int, db: Session = Depends(get_db)):
 # ------------------------------------------
 # Generate Survey from Prompt (AI-Powered)
 # ------------------------------------------
-@router.post("/generate-from-prompt", response_model=SurveyResponse)
+@router.post("/generate-from-prompt")
 def generate_from_prompt(
-    prompt: str,
-    num_questions: int = 5,
-    survey_title: str = "AI Survey",
-    survey_description: str = "Generated using LLM",
+    payload: SurveyPromptPayload,
     db: Session = Depends(get_db)
 ):
     try:
-        questions = llm_service.generate_questions(prompt, num_questions)
+        # Generate questions from LLM
+        questions = llm_service.generate_questions(
+            payload.prompt,
+            payload.num_questions
+        )
 
+        # Create Survey
         survey = Survey(
-            title=survey_title,
-            description=survey_description,
+            title=payload.survey_title,
+            description=payload.survey_description,
             survey_type="ai_generated",
             languages=["en"],
             adaptive_enabled=True,
@@ -93,6 +105,8 @@ def generate_from_prompt(
         db.commit()
         db.refresh(survey)
 
+        # Save generated questions
+        saved_questions = []
         for idx, q in enumerate(questions):
             question = Question(
                 survey_id=survey.id,
@@ -103,13 +117,23 @@ def generate_from_prompt(
                 is_mandatory=True
             )
             db.add(question)
+            saved_questions.append(q["text"])
         db.commit()
 
-        return survey
+        # Return survey + generated questions
+        return {
+            "survey_id": survey.id,
+            "title": survey.title,
+            "description": survey.description,
+            "questions": saved_questions
+        }
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"LLM-based survey generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"LLM-based survey generation failed: {str(e)}"
+        )
 
 # -------------------------------
 # Get Next Adaptive Question
