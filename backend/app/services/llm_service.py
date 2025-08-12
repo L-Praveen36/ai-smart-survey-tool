@@ -1,11 +1,40 @@
 import os
 import json
 from ast import literal_eval
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def fallback_questions():
+    return [
+        {
+            "text": "Default Question 1",
+            "type": "text",
+            "translations": {},
+            "audio_file_uri": None,
+            "voice_enabled": False,
+            "audio_metadata": {},
+            "adaptive_enabled": True,
+            "adaptive_config": {},
+            "ai_generated": True,
+            "ai_metadata": {"model": "default"}
+        },
+        {
+            "text": "Default Question 2",
+            "type": "radio",
+            "options": ["Yes", "No"],
+            "translations": {},
+            "audio_file_uri": None,
+            "voice_enabled": False,
+            "audio_metadata": {},
+            "adaptive_enabled": True,
+            "adaptive_config": {},
+            "ai_generated": True,
+            "ai_metadata": {"model": "default"}
+        }
+    ]
 
 def generate_questions(prompt: str, num_questions: int = 5):
     try:
@@ -13,7 +42,6 @@ def generate_questions(prompt: str, num_questions: int = 5):
             "You are a survey expert. Generate well-structured, diverse, and clear survey questions "
             "based on the provided topic. Respond ONLY with a valid JSON list."
         )
-
         user_prompt = (
             f"Topic: {prompt}\n\n"
             f"Generate {num_questions} concise survey questions in this exact JSON format:\n"
@@ -27,8 +55,9 @@ def generate_questions(prompt: str, num_questions: int = 5):
             "- Do NOT include any extra text outside the JSON"
         )
 
+        # Try GPT-4 first
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -38,8 +67,9 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 max_tokens=1000
             )
             model_used = "gpt-4"
-        except openai.OpenAIError:
-            response = openai.ChatCompletion.create(
+        except Exception:
+            # fallback to GPT-3.5-turbo
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -50,7 +80,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
             )
             model_used = "gpt-3.5-turbo"
 
-        content = response['choices'][0]['message']['content'].strip()
+        content = response.choices[0].message.content.strip()
 
         # Try parsing the content as JSON
         try:
@@ -65,76 +95,19 @@ def generate_questions(prompt: str, num_questions: int = 5):
         if not isinstance(questions, list) or not all(isinstance(q, dict) and "text" in q and "type" in q for q in questions):
             raise ValueError("Invalid question format")
 
-        # EXTEND every question dict with extra features for your schema/model
+        # Extend questions with extra fields
         for q in questions:
-            q["translations"] = {}
-            q["audio_file_uri"] = None
-            q["voice_enabled"] = False
-            q["audio_metadata"] = {}
-            q["adaptive_enabled"] = True
-            q["adaptive_config"] = {}
+            q.setdefault("translations", {})
+            q.setdefault("audio_file_uri", None)
+            q.setdefault("voice_enabled", False)
+            q.setdefault("audio_metadata", {})
+            q.setdefault("adaptive_enabled", True)
+            q.setdefault("adaptive_config", {})
             q["ai_generated"] = True
-            q["ai_metadata"] = { "model": model_used }
+            q["ai_metadata"] = {"model": model_used}
 
         return questions
 
-    except openai.OpenAIError as oe:
-        print(f"OpenAI API error: {oe}")
-        # fallback default with all extra fields
-        return [
-            {
-                "text": "Default Question 1",
-                "type": "text",
-                "translations": {},
-                "audio_file_uri": None,
-                "voice_enabled": False,
-                "audio_metadata": {},
-                "adaptive_enabled": True,
-                "adaptive_config": {},
-                "ai_generated": True,
-                "ai_metadata": { "model": "default" }
-            },
-            {
-                "text": "Default Question 2",
-                "type": "radio",
-                "options": ["Yes", "No"],
-                "translations": {},
-                "audio_file_uri": None,
-                "voice_enabled": False,
-                "audio_metadata": {},
-                "adaptive_enabled": True,
-                "adaptive_config": {},
-                "ai_generated": True,
-                "ai_metadata": { "model": "default" }
-            }
-        ]
     except Exception as e:
         print(f"Error generating questions from LLM: {e}")
-        # fallback default with all extra fields
-        return [
-            {
-                "text": "Default Question 1",
-                "type": "text",
-                "translations": {},
-                "audio_file_uri": None,
-                "voice_enabled": False,
-                "audio_metadata": {},
-                "adaptive_enabled": True,
-                "adaptive_config": {},
-                "ai_generated": True,
-                "ai_metadata": { "model": "default" }
-            },
-            {
-                "text": "Default Question 2",
-                "type": "radio",
-                "options": ["Yes", "No"],
-                "translations": {},
-                "audio_file_uri": None,
-                "voice_enabled": False,
-                "audio_metadata": {},
-                "adaptive_enabled": True,
-                "adaptive_config": {},
-                "ai_generated": True,
-                "ai_metadata": { "model": "default" }
-            }
-        ]
+        return fallback_questions()
