@@ -37,25 +37,24 @@ def fallback_questions():
     ]
 
 def generate_questions(prompt: str, num_questions: int = 5):
-    try:
-        system_prompt = (
-            "You are a survey expert. Generate well-structured, diverse, and clear survey questions "
-            "based on the provided topic. Respond ONLY with a valid JSON list."
-        )
-        user_prompt = (
-            f"Topic: {prompt}\n\n"
-            f"Generate {num_questions} concise survey questions in this exact JSON format:\n"
-            "[\n"
-            "  {\"text\": \"Question 1?\", \"type\": \"text\"},\n"
-            "  {\"text\": \"Question 2?\", \"type\": \"radio\", \"options\": [\"Yes\", \"No\"]}\n"
-            "]\n\n"
-            "Rules:\n"
-            "- 'type' can only be 'text', 'radio', or 'checkbox'\n"
-            "- Include 'options' only if type is 'radio' or 'checkbox'\n"
-            "- Do NOT include any extra text outside the JSON"
-        )
+    system_prompt = (
+        "You are a survey expert. Generate well-structured, diverse, and clear survey questions "
+        "based on the provided topic. Respond ONLY with a valid JSON list."
+    )
+    user_prompt = (
+        f"Topic: {prompt}\n\n"
+        f"Generate {num_questions} concise survey questions in this exact JSON format:\n"
+        "[\n"
+        "  {\"text\": \"Question 1?\", \"type\": \"text\"},\n"
+        "  {\"text\": \"Question 2?\", \"type\": \"radio\", \"options\": [\"Yes\", \"No\"]}\n"
+        "]\n\n"
+        "Rules:\n"
+        "- 'type' can only be 'text', 'radio', or 'checkbox'\n"
+        "- Include 'options' only if type is 'radio' or 'checkbox'\n"
+        "- Do NOT include any extra text outside the JSON"
+    )
 
-        # Try GPT-4 first
+    try:
         try:
             response = client.chat.completions.create(
                 model="gpt-4",
@@ -68,7 +67,6 @@ def generate_questions(prompt: str, num_questions: int = 5):
             )
             model_used = "gpt-4"
         except Exception:
-            # fallback to GPT-3.5-turbo
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -82,20 +80,14 @@ def generate_questions(prompt: str, num_questions: int = 5):
 
         content = response.choices[0].message.content.strip()
 
-        # Try parsing the content as JSON
         try:
             questions = json.loads(content)
         except json.JSONDecodeError:
-            try:
-                questions = literal_eval(content)
-            except Exception:
-                raise ValueError("Invalid JSON format from LLM")
+            questions = literal_eval(content)
 
-        # Validate basic format
         if not isinstance(questions, list) or not all(isinstance(q, dict) and "text" in q and "type" in q for q in questions):
             raise ValueError("Invalid question format")
 
-        # Extend questions with extra fields
         for q in questions:
             q.setdefault("translations", {})
             q.setdefault("audio_file_uri", None)
@@ -109,5 +101,9 @@ def generate_questions(prompt: str, num_questions: int = 5):
         return questions
 
     except Exception as e:
-        print(f"Error generating questions from LLM: {e}")
+        # Simplified error handling:
+        if "rate limit" in str(e).lower():
+            print("OpenAI API rate limit exceeded:", e)
+        else:
+            print("OpenAI API error:", e)
         return fallback_questions()
