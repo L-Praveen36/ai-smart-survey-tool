@@ -28,29 +28,27 @@ class SurveyPromptPayload(BaseModel):
     ai_metadata: Dict[str, Any] = {}
 
 @router.post("/", response_model=SurveyResponse)
-def create_survey(
-    payload: SurveyCreateRequest,
-    db: Session = Depends(get_db)
-) -> SurveyResponse:
+def create_survey(payload: SurveyCreateRequest, db: Session = Depends(get_db)) -> SurveyResponse:
     try:
         new_survey = Survey(
             title=payload.title,
             description=payload.description,
             survey_type=payload.survey_type,
             nss_template_type=payload.nss_template_type,
-            languages=payload.languages if payload.languages else ["en"],
-            translations=payload.translations if hasattr(payload, "translations") else {},
+            languages=payload.languages or ["en"],
+            translations=getattr(payload, "translations", {}) or {},
             adaptive_enabled=payload.adaptive_enabled,
-            adaptive_config=payload.adaptive_config if hasattr(payload, "adaptive_config") else {},
+            adaptive_config=getattr(payload, "adaptive_config", {}) or {},
             voice_enabled=payload.voice_enabled,
-            audio_metadata=payload.audio_metadata if hasattr(payload, "audio_metadata") else {},
+            audio_metadata=getattr(payload, "audio_metadata", {}) or {},
             ai_generated=getattr(payload, "ai_generated", False),
-            ai_metadata=getattr(payload, "ai_metadata", {}),
-            status=payload.status or "draft"
+            ai_metadata=getattr(payload, "ai_metadata", {}) or {},
+            status=payload.status or "draft",
         )
         db.add(new_survey)
         db.commit()
         db.refresh(new_survey)
+
         if payload.survey_type == "nss" and payload.nss_template_type:
             nss_questions = nss_service.get_questions_from_template(payload.nss_template_type)
             for q in nss_questions:
@@ -71,14 +69,16 @@ def create_survey(
                     adaptive_enabled=q.get("adaptive_enabled", True),
                     adaptive_config=q.get("adaptive_config", {}),
                     ai_generated=q.get("ai_generated", False),
-                    ai_metadata=q.get("ai_metadata", {})
+                    ai_metadata=q.get("ai_metadata", {}),
                 )
                 db.add(question)
             db.commit()
+
         return new_survey
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Survey creation failed: {str(e)}")
+
 
 @router.get("/{survey_id}", response_model=SurveyResponse)
 def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
@@ -87,24 +87,23 @@ def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
         raise HTTPException(status_code=404, detail="Survey not found")
     return survey
 
+
 class SurveyPromptResult(BaseModel):
     survey_id: int
     title: str
     description: str
     questions: List[str]
 
+
 @router.post("/generate-from-prompt", response_model=SurveyPromptResult)
-def generate_from_prompt(
-    payload: SurveyPromptPayload,
-    db: Session = Depends(get_db)
-) -> SurveyPromptResult:
+def generate_from_prompt(payload: SurveyPromptPayload, db: Session = Depends(get_db)) -> SurveyPromptResult:
     try:
-        # IMPORTANT: llm_service.generate_questions internally tries:
-        # model="gpt-4o-mini" first, then fallback to model="gpt-4.1-nano"
+        # llm_service.generate_questions tries model "gpt-4o-mini" first, then fallback "gpt-4.1-nano"
         questions = llm_service.generate_questions(
             prompt=payload.prompt,
-            num_questions=payload.num_questions
+            num_questions=payload.num_questions,
         )
+
         survey = Survey(
             title=payload.survey_title,
             description=payload.survey_description,
@@ -117,11 +116,12 @@ def generate_from_prompt(
             audio_metadata=payload.audio_metadata,
             ai_generated=True,
             ai_metadata=payload.ai_metadata,
-            status="draft"
+            status="draft",
         )
         db.add(survey)
         db.commit()
         db.refresh(survey)
+
         saved_questions = []
         for idx, q in enumerate(questions):
             question = Question(
@@ -138,27 +138,30 @@ def generate_from_prompt(
                 adaptive_enabled=q.get("adaptive_enabled", True),
                 adaptive_config=q.get("adaptive_config", {}),
                 ai_generated=q.get("ai_generated", True),
-                ai_metadata=q.get("ai_metadata", {})
+                ai_metadata=q.get("ai_metadata", {}),
             )
             db.add(question)
             saved_questions.append(q["text"])
+
         db.commit()
+
         return SurveyPromptResult(
             survey_id=survey.id,
             title=survey.title,
             description=survey.description,
-            questions=saved_questions
+            questions=saved_questions,
         )
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"LLM-based survey generation failed: {str(e)}")
+
 
 @router.get("/{survey_id}/adaptive", response_model=AdaptiveQuestionResponse)
 def get_next_adaptive_question(
     survey_id: int,
     respondent_id: str = Query(...),
     language: str = Query("en"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> AdaptiveQuestionResponse:
     try:
         question = analytics_service.get_next_adaptive_question(survey_id, respondent_id, language, db)
@@ -168,12 +171,9 @@ def get_next_adaptive_question(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Adaptive logic failed: {str(e)}")
 
+
 @router.get("/{survey_id}/progress")
-def get_survey_progress(
-    survey_id: int,
-    respondent_id: str,
-    db: Session = Depends(get_db)
-) -> Dict[str, Any]:
+def get_survey_progress(survey_id: int, respondent_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     try:
         total = db.query(Question).filter_by(survey_id=survey_id).count()
         answered = db.query(Response).filter_by(survey_id=survey_id, respondent_id=respondent_id).count()
@@ -183,7 +183,7 @@ def get_survey_progress(
             "respondent_id": respondent_id,
             "answered_questions": answered,
             "total_questions": total,
-            "completion_percentage": percent
+            "completion_percentage": percent,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching progress: {str(e)}")

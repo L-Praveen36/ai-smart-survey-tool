@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from ast import literal_eval
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -55,6 +56,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
     )
 
     try:
+        # Try first model
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -66,7 +68,8 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 max_tokens=1000
             )
             model_used = "gpt-4o-mini"
-        except Exception:
+        except Exception as inner_e:
+            logging.warning(f"gpt-4o-mini failed, falling back to gpt-4.1-nano: {inner_e}")
             response = client.chat.completions.create(
                 model="gpt-4.1-nano",
                 messages=[
@@ -79,10 +82,12 @@ def generate_questions(prompt: str, num_questions: int = 5):
             model_used = "gpt-4.1-nano"
 
         content = response.choices[0].message.content.strip()
+        logging.info(f"OpenAI response from model {model_used}: {content}")
 
         try:
             questions = json.loads(content)
         except json.JSONDecodeError:
+            logging.warning("JSON decode failed, trying literal_eval")
             questions = literal_eval(content)
 
         if not isinstance(questions, list) or not all(isinstance(q, dict) and "text" in q and "type" in q for q in questions):
@@ -102,9 +107,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
 
     except Exception as e:
         error_str = str(e).lower()
+        logging.error(f"OpenAI API error: {e}")
         if "quota" in error_str or "insufficient_quota" in error_str or "429" in error_str:
-            print("OpenAI API quota exceeded or rate limit hit:", e)
-            return fallback_questions()
-        else:
-            print("OpenAI API error:", e)
-            return fallback_questions()
+            logging.error("OpenAI API quota exceeded or rate limit hit.")
+        return fallback_questions()
