@@ -14,7 +14,8 @@ router = APIRouter()
 
 # --------- QuestionResponse Model ---------
 class QuestionResponse(BaseModel):
-    text: str
+    question_text: Optional[str] = None  # Ensure frontend can access consistently
+    text: Optional[str] = None           # Legacy / alternate field
     type: Optional[str] = "text"
     options: Optional[List[str]] = []
     translations: Optional[Dict[str, str]] = {}
@@ -76,7 +77,7 @@ def create_survey(payload: SurveyCreateRequest, db: Session = Depends(get_db)) -
             for q in nss_questions:
                 question = Question(
                     survey_id=new_survey.id,
-                    question_text=q["question_text"],
+                    question_text=q.get("question_text") or q.get("text", ""),
                     question_type=q.get("question_type", "text"),
                     options=q.get("options", []),
                     validation_rules=q.get("validation_rules", {}),
@@ -138,25 +139,40 @@ def generate_from_prompt(payload: SurveyPromptPayload, db: Session = Depends(get
 
         saved_questions = []
         for idx, q in enumerate(questions):
+            # Normalize fields for frontend compatibility
+            question_data = {
+                "question_text": q.get("question_text") or q.get("text", ""),
+                "text": q.get("text", ""),
+                "type": q.get("type", "text"),
+                "options": q.get("options", []),
+                "translations": q.get("translations", {}),
+                "audio_file_uri": q.get("audio_file_uri"),
+                "voice_enabled": q.get("voice_enabled", False),
+                "audio_metadata": q.get("audio_metadata", {}),
+                "adaptive_enabled": q.get("adaptive_enabled", True),
+                "adaptive_config": q.get("adaptive_config", {}),
+                "ai_generated": q.get("ai_generated", True),
+                "ai_metadata": q.get("ai_metadata", {}),
+            }
+
             question = Question(
                 survey_id=survey.id,
-                question_text=q.get("text", ""),
-                question_type=q.get("type", "text"),
-                options=q.get("options", []),
+                question_text=question_data["question_text"],
+                question_type=question_data["type"],
+                options=question_data["options"],
                 order_index=idx + 1,
                 is_mandatory=True,
-                translations=q.get("translations", {}),
-                audio_file_uri=q.get("audio_file_uri"),
-                voice_enabled=q.get("voice_enabled", False),
-                audio_metadata=q.get("audio_metadata", {}),
-                adaptive_enabled=q.get("adaptive_enabled", True),
-                adaptive_config=q.get("adaptive_config", {}),
-                ai_generated=q.get("ai_generated", True),
-                ai_metadata=q.get("ai_metadata", {}),
+                translations=question_data["translations"],
+                audio_file_uri=question_data["audio_file_uri"],
+                voice_enabled=question_data["voice_enabled"],
+                audio_metadata=question_data["audio_metadata"],
+                adaptive_enabled=question_data["adaptive_enabled"],
+                adaptive_config=question_data["adaptive_config"],
+                ai_generated=question_data["ai_generated"],
+                ai_metadata=question_data["ai_metadata"],
             )
             db.add(question)
-            # Append full QuestionResponse object for frontend
-            saved_questions.append(QuestionResponse(**q))
+            saved_questions.append(QuestionResponse(**question_data))
 
         db.commit()
 
