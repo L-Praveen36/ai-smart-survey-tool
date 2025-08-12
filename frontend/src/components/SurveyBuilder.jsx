@@ -48,7 +48,9 @@ const SurveyBuilder = () => {
         }
       );
 
-      // Response is always an object { survey_id, title, description, questions }
+      // Debugging log to inspect the questions received from API
+      console.log('QUESTIONS FROM API:', response.data.questions);
+
       setQuestions(response.data.questions || []);
 
       if (!response.data.questions || response.data.questions.length === 0) {
