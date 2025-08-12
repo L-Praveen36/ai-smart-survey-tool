@@ -12,6 +12,20 @@ from app.services import nss_service, llm_service, analytics_service
 
 router = APIRouter()
 
+# --------- QuestionResponse Model ---------
+class QuestionResponse(BaseModel):
+    text: str
+    type: Optional[str] = "text"
+    options: Optional[List[str]] = []
+    translations: Optional[Dict[str, str]] = {}
+    audio_file_uri: Optional[str] = None
+    voice_enabled: Optional[bool] = False
+    audio_metadata: Optional[Dict[str, Any]] = {}
+    adaptive_enabled: Optional[bool] = True
+    adaptive_config: Optional[Dict[str, Any]] = {}
+    ai_generated: Optional[bool] = True
+    ai_metadata: Optional[Dict[str, Any]] = {}
+
 # --------- Request Models ---------
 class SurveyPromptPayload(BaseModel):
     prompt: str
@@ -31,8 +45,7 @@ class SurveyPromptResult(BaseModel):
     survey_id: int
     title: str
     description: str
-    questions: List[str]
-
+    questions: List[QuestionResponse]
 
 # --------- Create Survey (Manual) ---------
 @router.post("/", response_model=SurveyResponse)
@@ -88,7 +101,6 @@ def create_survey(payload: SurveyCreateRequest, db: Session = Depends(get_db)) -
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Survey creation failed: {str(e)}")
 
-
 # --------- Get Survey by ID ---------
 @router.get("/{survey_id}", response_model=SurveyResponse)
 def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
@@ -96,7 +108,6 @@ def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
     return survey
-
 
 # --------- AI Generate Survey from Prompt ---------
 @router.post("/generate-from-prompt", response_model=SurveyPromptResult)
@@ -129,7 +140,7 @@ def generate_from_prompt(payload: SurveyPromptPayload, db: Session = Depends(get
         for idx, q in enumerate(questions):
             question = Question(
                 survey_id=survey.id,
-                question_text=q["text"],
+                question_text=q.get("text", ""),
                 question_type=q.get("type", "text"),
                 options=q.get("options", []),
                 order_index=idx + 1,
@@ -144,7 +155,8 @@ def generate_from_prompt(payload: SurveyPromptPayload, db: Session = Depends(get
                 ai_metadata=q.get("ai_metadata", {}),
             )
             db.add(question)
-            saved_questions.append(q["text"])
+            # Append full QuestionResponse object for frontend
+            saved_questions.append(QuestionResponse(**q))
 
         db.commit()
 
@@ -157,7 +169,6 @@ def generate_from_prompt(payload: SurveyPromptPayload, db: Session = Depends(get
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"LLM-based survey generation failed: {str(e)}")
-
 
 # --------- Adaptive Question Logic ---------
 @router.get("/{survey_id}/adaptive", response_model=AdaptiveQuestionResponse)
@@ -174,7 +185,6 @@ def get_next_adaptive_question(
         return {"message": "Survey completed", "completed": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Adaptive logic failed: {str(e)}")
-
 
 # --------- Get Progress ---------
 @router.get("/{survey_id}/progress")

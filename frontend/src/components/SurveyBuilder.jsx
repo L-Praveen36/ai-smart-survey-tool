@@ -22,46 +22,48 @@ const SurveyBuilder = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleGenerateSurvey = async () => {
-    if (
-      !title.trim() ||
-      !description.trim() ||
-      !prompt.trim() ||
-      languages.length === 0
-    ) {
-      alert('Please fill in all fields and select at least one language.');
-      return;
-    }
+  if (
+    !title.trim() ||
+    !description.trim() ||
+    !prompt.trim() ||
+    languages.length === 0
+  ) {
+    alert('Please fill in all fields and select at least one language.');
+    return;
+  }
 
-    setLoading(true);
-    try {
-      // Request includes all feature fields, matches backend
-      const response = await axios.post(
-        `${API_BASE_URL}/api/surveys/generate-from-prompt`,
-        {
-          prompt,
-          num_questions: numQuestions,
-          survey_title: title,
-          survey_description: description,
-          languages,
-          voice_enabled: voiceEnabled,
-          adaptive_enabled: adaptiveEnabled,
-          ai_generated: true,
-        }
-      );
-
-     setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
-      if (response.data.questions) {
-        setQuestions(response.data.questions);
-      } else {
-        alert('No questions generated. Please check your prompt.');
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/surveys/generate-from-prompt`,
+      {
+        prompt,
+        num_questions: numQuestions,
+        survey_title: title,
+        survey_description: description,
+        languages,
+        voice_enabled: voiceEnabled,
+        adaptive_enabled: adaptiveEnabled,
+        ai_generated: true,
       }
-    } catch (error) {
-      console.error('Error generating survey:', error);
-      alert('Survey generation failed.');
-    } finally {
-      setLoading(false);
+    );
+    // Only this line needed!
+    setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
+    // Optionally you can alert if no questions at all:
+    if (
+      !Array.isArray(response.data) &&
+      (!response.data.questions || response.data.questions.length === 0)
+    ) {
+      alert('No questions generated. Please check your prompt or backend.');
     }
-  };
+  } catch (error) {
+    console.error('Error generating survey:', error);
+    alert('Survey generation failed.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="p-6 max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-6 border border-gray-100">
