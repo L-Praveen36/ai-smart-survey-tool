@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-// Supported languages (expand as needed)
+// Supported languages
 const LANGUAGE_OPTIONS = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी' },
@@ -47,13 +47,11 @@ const SurveyBuilder = () => {
           ai_generated: true,
         }
       );
-      // Only this line needed!
-      setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
-      // Optionally you can alert if no questions at all:
-      if (
-        !Array.isArray(response.data) &&
-        (!response.data.questions || response.data.questions.length === 0)
-      ) {
+
+      // Response is always an object { survey_id, title, description, questions }
+      setQuestions(response.data.questions || []);
+
+      if (!response.data.questions || response.data.questions.length === 0) {
         alert('No questions generated. Please check your prompt or backend.');
       }
     } catch (error) {
@@ -63,7 +61,6 @@ const SurveyBuilder = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="p-6 max-w-3xl mx-auto bg-white shadow-xl rounded-2xl mt-6 border border-gray-100">
@@ -182,7 +179,7 @@ const SurveyBuilder = () => {
         {loading ? 'Generating...' : 'Generate Survey'}
       </button>
 
-      {/* Generated Questions with all extra fields */}
+      {/* Generated Questions */}
       {questions.length > 0 && (
         <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
           <h3 className="text-xl font-semibold mb-3 text-gray-800">
@@ -190,40 +187,51 @@ const SurveyBuilder = () => {
           </h3>
           <ul className="space-y-3">
             {questions.map((q, idx) => (
-              <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
-                {/* Always display question text, preferring translation if available */}
+              <li
+                key={idx}
+                className="bg-white p-3 rounded-md shadow-sm border flex flex-col"
+              >
+                {/* Always display question text, prefer translation if available */}
                 <span className="font-bold text-blue-700 mb-1">
-                  {q.translations && q.translations[languages[0]]
-                    ? q.translations[languages[0]]
-                    : (q.text || q.question_text || "Question text missing")
-                  }
+                  {q?.translations?.[languages[0]] ||
+                    q?.text ||
+                    q?.question_text ||
+                    'Question text missing'}
                 </span>
-                {/* Feature badges and details */}
+
+                {/* Feature badges */}
                 <div className="flex gap-2 items-center mb-1">
-                  {q.ai_generated &&
-                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">🤖 AI</span>
-                  }
-                  {q.voice_enabled &&
-                    <span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-xs font-bold">🎙️ Voice</span>
-                  }
-                  {q.adaptive_enabled &&
-                    <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold">⚡ Adaptive</span>
-                  }
-                  {(q.type || q.question_type) &&
+                  {q.ai_generated && (
+                    <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">
+                      🤖 AI
+                    </span>
+                  )}
+                  {q.voice_enabled && (
+                    <span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-xs font-bold">
+                      🎙️ Voice
+                    </span>
+                  )}
+                  {q.adaptive_enabled && (
+                    <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold">
+                      ⚡ Adaptive
+                    </span>
+                  )}
+                  {(q.type || q.question_type) && (
                     <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
                       {q.type || q.question_type}
                     </span>
-                  }
+                  )}
                 </div>
-                {q.options && q.options.length > 0 &&
+
+                {/* Options */}
+                {q.options && q.options.length > 0 && (
                   <div className="text-sm text-gray-600">
                     Options: {q.options.join(', ')}
                   </div>
-                }
+                )}
               </li>
             ))}
           </ul>
-
         </div>
       )}
     </div>
