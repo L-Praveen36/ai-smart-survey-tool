@@ -8,12 +8,11 @@ from app.models import survey, question, response, user, enumerator
 
 app = FastAPI(title="AI Smart Survey Tool")
 
-
 # CORS setup
 origins = [
-    "http://localhost:5173",                    # Local frontend (Vite dev server)
+    "http://localhost:5173",                         # Local frontend (Vite dev server)
     "https://ai-smart-survey-tool.vercel.app",
-    "https://ai-smart-survey-tool-mu.vercel.app",     # Replace with your actual Vercel domain after first deploy
+    "https://ai-smart-survey-tool-mu.vercel.app",    # Replace with your actual Vercel domain after first deploy
 ]
 
 app.add_middleware(
@@ -34,7 +33,7 @@ def read_root():
 def health_check():
     return {"status": "ok"}
 
-# API routes
+# API routes (all support advanced features in their router logic)
 app.include_router(survey_routes.router, prefix="/api/surveys", tags=["Surveys"])
 app.include_router(voice_routes.router, prefix="/api/voice", tags=["Voice"])
 app.include_router(analytics_routes.router, prefix="/api/analytics", tags=["Analytics"])

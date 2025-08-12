@@ -5,7 +5,6 @@ import openai
 from dotenv import load_dotenv
 
 load_dotenv()
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def generate_questions(prompt: str, num_questions: int = 5):
@@ -38,8 +37,8 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 temperature=0.7,
                 max_tokens=1000
             )
+            model_used = "gpt-4"
         except openai.error.InvalidRequestError:
-            # fallback to GPT-3.5 if GPT-4 isn't available
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -49,6 +48,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 temperature=0.7,
                 max_tokens=1000
             )
+            model_used = "gpt-3.5-turbo"
 
         content = response['choices'][0]['message']['content'].strip()
 
@@ -61,17 +61,50 @@ def generate_questions(prompt: str, num_questions: int = 5):
             except Exception:
                 raise ValueError("Invalid JSON format from LLM")
 
-        # Validate questions format
+        # Validate basic format
         if not isinstance(questions, list) or not all(isinstance(q, dict) and "text" in q and "type" in q for q in questions):
             raise ValueError("Invalid question format")
+
+        # EXTEND every question dict with extra features for your schema/model
+        for q in questions:
+            q["translations"] = {}
+            q["audio_file_uri"] = None
+            q["voice_enabled"] = False
+            q["audio_metadata"] = {}
+            q["adaptive_enabled"] = True
+            q["adaptive_config"] = {}
+            q["ai_generated"] = True
+            q["ai_metadata"] = { "model": model_used }
 
         return questions
 
     except Exception as e:
         print(f"Error generating questions from LLM: {e}")
-        # fallback default
+        # fallback default with all extra fields
         return [
-            {"text": "Default Question 1", "type": "text"},
-            {"text": "Default Question 2", "type": "radio", "options": ["Yes", "No"]}
+            {
+                "text": "Default Question 1",
+                "type": "text",
+                "translations": {},
+                "audio_file_uri": None,
+                "voice_enabled": False,
+                "audio_metadata": {},
+                "adaptive_enabled": True,
+                "adaptive_config": {},
+                "ai_generated": True,
+                "ai_metadata": { "model": "default" }
+            },
+            {
+                "text": "Default Question 2",
+                "type": "radio",
+                "options": ["Yes", "No"],
+                "translations": {},
+                "audio_file_uri": None,
+                "voice_enabled": False,
+                "audio_metadata": {},
+                "adaptive_enabled": True,
+                "adaptive_config": {},
+                "ai_generated": True,
+                "ai_metadata": { "model": "default" }
+            }
         ]
-

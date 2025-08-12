@@ -3,9 +3,11 @@
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb; /* lighter, cleaner border */
+  border-bottom: 1px solid #e5e7eb; /* blue-gray-100 */
   padding: 12px 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* subtle depth */
+  position: relative; /* needed for mobile menu absolute */
+  z-index: 10;
 }
 
 .navbar-logo {
@@ -13,8 +15,8 @@
   align-items: center;
   font-weight: 700;
   font-size: 1.5rem;
-  color: #2563eb; /* Tailwind's blue-600 */
-  letter-spacing: -0.5px; /* modern, compact look */
+  color: #2563eb; /* Tailwind blue-600 */
+  letter-spacing: -0.5px;
 }
 
 .navbar-logo img {
@@ -24,14 +26,68 @@
   object-fit: contain;
 }
 
+/* If using Logo.jsx/Logo.tsx component, give it spacing */
+.navbar-logo .feature-badges {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+.navbar-logo .feature-badges span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #6d28d9;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-left: 2px;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+}
 .navbar-links a {
   margin-left: 20px;
   text-decoration: none;
-  color: #374151; /* Tailwind's gray-700 */
+  color: #374151; /* Tailwind gray-700 */
   font-weight: 500;
   transition: color 0.2s ease-in-out;
 }
 
-.navbar-links a:hover {
+.navbar-links a:hover,
+.navbar-links a.active {
   color: #2563eb; /* blue-600 on hover */
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-actions .signup-btn {
+  background: #2563eb;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s;
+  border: none;
+}
+
+.navbar-actions .signup-btn:hover {
+  background: #174ea6;
+}
+
+.navbar-actions .login-link {
+  color: #2563eb;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.navbar-actions .login-link:hover {
+  color: #174ea6;
 }

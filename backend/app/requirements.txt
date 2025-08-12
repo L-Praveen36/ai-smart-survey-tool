@@ -1,0 +1,25 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+openai
+
+# Optional (for deployment or frontend CORS)
+httpx
+python-multipart
+jinja2
+
+# If using PostgreSQL instead of SQLite
+psycopg2-binary
+
+# If using voice/translation later
+SpeechRecognition
+pyaudio
+gtts
+langdetect
+transformers
+alembic==1.12.1
+passlib[bcrypt]
+pydantic[email]
+python-dotenv

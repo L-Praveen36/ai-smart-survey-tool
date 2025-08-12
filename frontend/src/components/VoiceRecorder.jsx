@@ -1,41 +1,55 @@
 import React, { useState, useRef } from 'react';
 
-const VoiceRecorder = () => {
+const VoiceRecorder = ({ onAudioRecorded }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState(null);
+  const [error, setError] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunks = useRef([]);
 
   const startRecording = async () => {
+    setError(null);
     setIsRecording(true);
     audioChunks.current = [];
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunks.current.push(event.data);
-        }
+        if (event.data.size > 0) audioChunks.current.push(event.data);
       };
 
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(audioChunks.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(blob);
         setAudioURL(url);
+        // Pass the recorded audio blob out to parent for backend upload if needed
+        if (onAudioRecorded) onAudioRecorded(blob, url);
       };
 
       mediaRecorderRef.current.start();
     } catch (err) {
-      console.error('Microphone access denied or error:', err);
+      setError('Microphone access denied or not supported. Please check your browser permissions.');
       setIsRecording(false);
     }
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
+    try {
+      mediaRecorderRef.current?.stop();
+    } catch {
+      setError('Recorder failed to stop safely.');
+    }
     setIsRecording(false);
+  };
+
+  const handleDownload = () => {
+    if (audioURL) {
+      const a = document.createElement('a');
+      a.href = audioURL;
+      a.download = 'recording.webm';
+      a.click();
+    }
   };
 
   return (
@@ -43,7 +57,11 @@ const VoiceRecorder = () => {
       <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center justify-center gap-2">
         🎙️ Voice Recorder
       </h2>
-
+      {error && (
+        <div className="mb-3 text-red-600 font-medium text-center">
+          {error}
+        </div>
+      )}
       {!isRecording ? (
         <button
           onClick={startRecording}
@@ -67,6 +85,14 @@ const VoiceRecorder = () => {
             src={audioURL}
             className="w-full rounded-lg border border-gray-300 shadow-sm"
           ></audio>
+          <div className="flex gap-4 flex-wrap items-center justify-center mt-2">
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 rounded bg-green-600 text-white shadow hover:bg-green-700 text-sm"
+            >
+              Download Recording
+            </button>
+          </div>
           <p className="text-sm text-gray-500 mt-2 italic">
             ✅ Recording ready for submission
           </p>

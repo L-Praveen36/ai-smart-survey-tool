@@ -1,10 +1,7 @@
-# backend/app/services/analytics_service.py
-
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models import Question, Response
 from app.schemas import AdaptiveQuestionResponse
-
 
 def get_next_adaptive_question(
     survey_id: int, respondent_id: str, language: str, db: Session
@@ -34,9 +31,14 @@ def get_next_adaptive_question(
         if not next_q:
             return None  # All questions answered
 
-        # Choose language-specific translation if exists
-        question_text = next_q.translations.get(language, next_q.question_text) if getattr(next_q, "translations", None) else next_q.question_text
+        # Multilingual question text
+        question_text = (
+            next_q.translations.get(language, next_q.question_text)
+            if getattr(next_q, "translations", None)
+            else next_q.question_text
+        )
 
+        # Build response with all features
         return AdaptiveQuestionResponse(
             question_id=next_q.id,
             question_text=question_text,
@@ -44,6 +46,14 @@ def get_next_adaptive_question(
             options=next_q.options or [],
             order_index=next_q.order_index,
             completed=False,
+            translations=next_q.translations,
+            audio_file_uri=next_q.audio_file_uri,
+            voice_enabled=next_q.voice_enabled,
+            audio_metadata=next_q.audio_metadata,
+            adaptive_enabled=next_q.adaptive_enabled,
+            adaptive_config=next_q.adaptive_config,
+            ai_generated=next_q.ai_generated,
+            ai_metadata=next_q.ai_metadata,
         )
 
     except Exception as e:

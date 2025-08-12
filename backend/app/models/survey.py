@@ -5,7 +5,6 @@ from sqlalchemy.sql import func
 from app.database import Base
 from app.models.question import Question
 
-
 class Survey(Base):
     __tablename__ = "surveys"
 
@@ -14,9 +13,14 @@ class Survey(Base):
     description = Column(Text)
     survey_type = Column(String(50))
     nss_template_type = Column(String(50), nullable=True)
-    languages = Column(JSON, default=lambda: ["en"])
-    adaptive_enabled = Column(Boolean, default=True)
-    voice_enabled = Column(Boolean, default=False)
+    languages = Column(JSON, default=list)              # Multilingual support
+    translations = Column(JSON, default=dict)           # Multilingual text/title/desc
+    adaptive_enabled = Column(Boolean, default=True)    # Adaptive/branching survey feature
+    adaptive_config = Column(JSON, default=dict)        # Adaptive logic/config
+    voice_enabled = Column(Boolean, default=False)      # Audio/voice support
+    audio_metadata = Column(JSON, default=dict)         # Additional audio config/info
+    ai_generated = Column(Boolean, default=False)       # LLM/AI survey flag
+    ai_metadata = Column(JSON, default=dict)            # AI prompt/context/history
     status = Column(String(50), default="draft")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

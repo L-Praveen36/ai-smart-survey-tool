@@ -1,5 +1,3 @@
-# backend/app/routes/response_routes.py
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -9,11 +7,13 @@ from app.schemas import SubmitResponseRequest, SubmitResponseResult
 
 router = APIRouter(prefix="/responses", tags=["Responses"])
 
-
 @router.post("/submit", response_model=SubmitResponseResult)
-def submit_response(payload: SubmitResponseRequest, db: Session = Depends(get_db)):
+def submit_response(
+    payload: SubmitResponseRequest,
+    db: Session = Depends(get_db)
+) -> SubmitResponseResult:
     try:
-        # Check if this respondent already answered this question
+        # Check if the respondent has already answered this question
         existing = (
             db.query(Response)
             .filter(
@@ -25,11 +25,18 @@ def submit_response(payload: SubmitResponseRequest, db: Session = Depends(get_db
         )
 
         if existing:
-            # Update the existing answer
+            # Update the existing response with all advanced fields
             existing.answer = payload.answer
             existing.confidence_score = payload.confidence_score
             existing.validation_status = payload.validation_status
             existing.extra_metadata = payload.extra_metadata or {}
+            existing.language = payload.language
+            existing.translations = payload.translations or {}
+            existing.audio_file_uri = payload.audio_file_uri
+            existing.voice_enabled = payload.voice_enabled
+            existing.audio_metadata = payload.audio_metadata or {}
+            existing.adaptive_data = payload.adaptive_data or {}
+            existing.ai_context = payload.ai_context or {}
             db.commit()
             db.refresh(existing)
 
@@ -40,9 +47,14 @@ def submit_response(payload: SubmitResponseRequest, db: Session = Depends(get_db
                 respondent_id=existing.respondent_id,
                 validation_status=existing.validation_status,
                 message="Response updated successfully",
+                language=existing.language,
+                audio_file_uri=existing.audio_file_uri,
+                voice_enabled=existing.voice_enabled,
+                adaptive_data=existing.adaptive_data,
+                ai_context=existing.ai_context,
             )
 
-        # Create a new response record
+        # Create a new response record with all advanced fields
         new_response = Response(
             survey_id=payload.survey_id,
             question_id=payload.question_id,
@@ -51,6 +63,13 @@ def submit_response(payload: SubmitResponseRequest, db: Session = Depends(get_db
             confidence_score=payload.confidence_score,
             validation_status=payload.validation_status,
             extra_metadata=payload.extra_metadata or {},
+            language=payload.language,
+            translations=payload.translations or {},
+            audio_file_uri=payload.audio_file_uri,
+            voice_enabled=payload.voice_enabled,
+            audio_metadata=payload.audio_metadata or {},
+            adaptive_data=payload.adaptive_data or {},
+            ai_context=payload.ai_context or {},
         )
         db.add(new_response)
         db.commit()
@@ -63,6 +82,11 @@ def submit_response(payload: SubmitResponseRequest, db: Session = Depends(get_db
             respondent_id=new_response.respondent_id,
             validation_status=new_response.validation_status,
             message="Response submitted successfully",
+            language=new_response.language,
+            audio_file_uri=new_response.audio_file_uri,
+            voice_enabled=new_response.voice_enabled,
+            adaptive_data=new_response.adaptive_data,
+            ai_context=new_response.ai_context,
         )
 
     except Exception as e:

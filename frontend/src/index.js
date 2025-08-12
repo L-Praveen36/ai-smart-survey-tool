@@ -4,10 +4,13 @@ import App from './App';
 import './index.css';
 
 const container = document.getElementById('root');
-const root = ReactDOM.createRoot(container);
-
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+if (container) {
+  const root = ReactDOM.createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+} else {
+  throw new Error("Root container not found");
+}

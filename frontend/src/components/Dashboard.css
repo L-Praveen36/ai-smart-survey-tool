@@ -1,11 +1,55 @@
+.dashboard {
+  @apply max-w-5xl mx-auto px-4 py-8;
+}
+
 .dashboard h2 {
-  @apply text-gray-800 font-semibold font-sans;
+  @apply text-4xl font-bold text-gray-800 text-center mb-8;
+}
+
+.dashboard .language-picker {
+  @apply mb-5 flex justify-center;
 }
 
 .dashboard .card {
-  @apply rounded-2xl transition-transform transition-shadow duration-200 ease-in-out;
+  @apply bg-white rounded-2xl p-6 shadow-sm border border-gray-200 transition-transform transition-shadow duration-200 ease-in-out;
 }
 
 .dashboard .card:hover {
   @apply scale-105 shadow-lg;
+}
+
+.dashboard .card-title {
+  @apply text-xl font-semibold text-blue-600 mr-2 flex items-center;
+}
+
+.dashboard .ai-badge {
+  @apply bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded ml-2 font-bold;
+}
+
+.dashboard .voice-badge {
+  @apply bg-teal-100 text-teal-700 text-xs px-2 py-1 rounded ml-2 font-bold;
+}
+
+.dashboard .adaptive-badge {
+  @apply bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded ml-2 font-bold;
+}
+
+.dashboard .desc {
+  @apply text-gray-700 mb-4;
+}
+
+.dashboard .questions-header {
+  @apply font-medium text-gray-800 mb-2;
+}
+
+.dashboard .questions-list {
+  @apply list-decimal pl-6 text-gray-600 space-y-1;
+}
+
+.dashboard .question-item {
+  @apply flex items-center;
+}
+
+.dashboard .option-list {
+  @apply ml-3 text-gray-400 text-xs;
 }

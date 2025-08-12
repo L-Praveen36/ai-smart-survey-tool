@@ -12,7 +12,8 @@ DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL", "sqlite:///./survey.db")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    pool_pre_ping=True  # robust for cloud/docker/advanced usage
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

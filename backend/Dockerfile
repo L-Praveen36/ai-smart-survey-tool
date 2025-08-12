@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-# Install system dependencies needed for PyAudio
+# Install system dependencies needed for PyAudio and audio/voice features
 RUN apt-get update && apt-get install -y \
     gcc \
     portaudio19-dev \
@@ -14,7 +14,7 @@ COPY backend/requirements.txt ./requirements.txt
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all backend code into container
+# Copy all backend code into the container
 COPY backend/ ./
 
 # Use Render's PORT environment variable if available, fallback to 10000 for local
