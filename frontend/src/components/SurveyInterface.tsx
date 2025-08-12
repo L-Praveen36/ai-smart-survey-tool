@@ -30,7 +30,7 @@ const handleGenerateSurvey = async () => {
   setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/surveys`, {
+      const response = await fetch(`${API_BASE_URL}/api/surveys/generate-from-prompt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ promptData }),
