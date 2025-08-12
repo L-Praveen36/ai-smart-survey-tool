@@ -49,7 +49,12 @@ const SurveyBuilder = () => {
         }
       );
 
-      setQuestions(response.data.questions || []);
+     setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
+      if (response.data.questions) {
+        setQuestions(response.data.questions);
+      } else {
+        alert('No questions generated. Please check your prompt.');
+      }
     } catch (error) {
       console.error('Error generating survey:', error);
       alert('Survey generation failed.');
