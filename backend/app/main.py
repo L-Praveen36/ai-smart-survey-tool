@@ -20,16 +20,18 @@ app = FastAPI(title="AI Smart Survey Tool")
 origins = [
     "http://localhost:5173",                         # Local frontend (Vite dev server)
     "https://ai-smart-survey-tool.vercel.app",
-    "https://ai-smart-survey-tool-mu.vercel.app",    # Replace with your actual Vercel domain after first deploy
+    "https://ai-smart-survey-tool-mu.vercel.app",
+    "https://ai-smart-survey-tool-szm5.onrender.com",    # Replace with your actual Vercel domain after first deploy
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allow all
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Root route
 @app.get("/")

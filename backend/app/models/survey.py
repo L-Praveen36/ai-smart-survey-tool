@@ -33,3 +33,10 @@ class Survey(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    enumerators = relationship(
+    "EnumeratorAssignment",
+    back_populates="survey",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
+)
+
