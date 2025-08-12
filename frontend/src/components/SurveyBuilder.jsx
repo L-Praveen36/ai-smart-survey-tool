@@ -22,47 +22,47 @@ const SurveyBuilder = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleGenerateSurvey = async () => {
-  if (
-    !title.trim() ||
-    !description.trim() ||
-    !prompt.trim() ||
-    languages.length === 0
-  ) {
-    alert('Please fill in all fields and select at least one language.');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/surveys/generate-from-prompt`,
-      {
-        prompt,
-        num_questions: numQuestions,
-        survey_title: title,
-        survey_description: description,
-        languages,
-        voice_enabled: voiceEnabled,
-        adaptive_enabled: adaptiveEnabled,
-        ai_generated: true,
-      }
-    );
-    // Only this line needed!
-    setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
-    // Optionally you can alert if no questions at all:
     if (
-      !Array.isArray(response.data) &&
-      (!response.data.questions || response.data.questions.length === 0)
+      !title.trim() ||
+      !description.trim() ||
+      !prompt.trim() ||
+      languages.length === 0
     ) {
-      alert('No questions generated. Please check your prompt or backend.');
+      alert('Please fill in all fields and select at least one language.');
+      return;
     }
-  } catch (error) {
-    console.error('Error generating survey:', error);
-    alert('Survey generation failed.');
-  } finally {
-    setLoading(false);
-  }
-};
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/surveys/generate-from-prompt`,
+        {
+          prompt,
+          num_questions: numQuestions,
+          survey_title: title,
+          survey_description: description,
+          languages,
+          voice_enabled: voiceEnabled,
+          adaptive_enabled: adaptiveEnabled,
+          ai_generated: true,
+        }
+      );
+      // Only this line needed!
+      setQuestions(Array.isArray(response.data) ? response.data : (response.data.questions || []));
+      // Optionally you can alert if no questions at all:
+      if (
+        !Array.isArray(response.data) &&
+        (!response.data.questions || response.data.questions.length === 0)
+      ) {
+        alert('No questions generated. Please check your prompt or backend.');
+      }
+    } catch (error) {
+      console.error('Error generating survey:', error);
+      alert('Survey generation failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
@@ -191,44 +191,39 @@ const SurveyBuilder = () => {
           <ul className="space-y-3">
             {questions.map((q, idx) => (
               <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
-                {/* Show translation if multiple languages */}
-                {q.translations && q.translations[languages[0]] ? (
-                  <span className="font-bold text-blue-700 mb-1">
-                    {q.translations[languages[0]]}
-                  </span>
-                ) : (
-                  <span className="font-bold text-blue-700 mb-1">
-                    {q.question_text || q.text}
-                  </span>
-                )}
-
-                {/* Feature badges: AI, Voice, Adaptive */}
+                {/* Always display question text, preferring translation if available */}
+                <span className="font-bold text-blue-700 mb-1">
+                  {q.translations && q.translations[languages[0]]
+                    ? q.translations[languages[0]]
+                    : (q.text || q.question_text || "Question text missing")
+                  }
+                </span>
+                {/* Feature badges and details */}
                 <div className="flex gap-2 items-center mb-1">
-                  {q.ai_generated && (
+                  {q.ai_generated &&
                     <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">🤖 AI</span>
-                  )}
-                  {q.voice_enabled && (
+                  }
+                  {q.voice_enabled &&
                     <span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-xs font-bold">🎙️ Voice</span>
-                  )}
-                  {q.adaptive_enabled && (
+                  }
+                  {q.adaptive_enabled &&
                     <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold">⚡ Adaptive</span>
-                  )}
-                  {(q.type || q.question_type) && (
+                  }
+                  {(q.type || q.question_type) &&
                     <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
                       {q.type || q.question_type}
                     </span>
-                  )}
+                  }
                 </div>
-
-                {/* Options for choice/radio questions */}
-                {q.options && q.options.length > 0 && (
+                {q.options && q.options.length > 0 &&
                   <div className="text-sm text-gray-600">
                     Options: {q.options.join(', ')}
                   </div>
-                )}
+                }
               </li>
             ))}
           </ul>
+
         </div>
       )}
     </div>
