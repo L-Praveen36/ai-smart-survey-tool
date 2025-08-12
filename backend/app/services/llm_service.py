@@ -101,9 +101,11 @@ def generate_questions(prompt: str, num_questions: int = 5):
         return questions
 
     except Exception as e:
-        # Simplified error handling:
-        if "rate limit" in str(e).lower():
-            print("OpenAI API rate limit exceeded:", e)
+        error_str = str(e).lower()
+        if "quota" in error_str or "insufficient_quota" in error_str or "429" in error_str:
+            print("OpenAI API quota exceeded or rate limit hit:", e)
+            # return fallback or an error response
+            return fallback_questions()
         else:
             print("OpenAI API error:", e)
-        return fallback_questions()
+            return fallback_questions()
