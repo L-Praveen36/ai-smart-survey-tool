@@ -2,8 +2,9 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateT
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from ..database import Base
-from .question import Question
+from app.database import Base
+from app.models.question import Question
+
 
 class Survey(Base):
     __tablename__ = "surveys"

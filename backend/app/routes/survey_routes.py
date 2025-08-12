@@ -3,14 +3,18 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel
 
-from ..database import get_db
-from ..models.survey import Survey
-from ..models.question import Question
-from ..models.response import Response
-from ..schemas import SurveyCreateRequest, SurveyResponse, AdaptiveQuestionResponse
-from ..services import nss_service, llm_service, analytics_service
+# Use absolute imports
+from app.database import get_db
+from app.models.survey import Survey
+from app.models.question import Question
+from app.models.response import Response
+from app.schemas import SurveyCreateRequest, SurveyResponse
+from app.schemas import AdaptiveQuestionResponse
+
+from app.services import nss_service, llm_service, analytics_service
 
 router = APIRouter()
+
 
 # -------------------------
 # Pydantic model for prompt
@@ -24,7 +28,7 @@ class SurveyPromptPayload(BaseModel):
 # -----------------------------------------
 # Create Survey (Custom, NSS, AI-Generated)
 # -----------------------------------------
-@router.post("/create", response_model=SurveyResponse)
+@router.post("/", response_model=SurveyResponse)
 def create_survey(payload: SurveyCreateRequest, db: Session = Depends(get_db)):
     try:
         new_survey = Survey(

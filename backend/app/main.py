@@ -1,11 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import survey_routes, voice_routes, analytics_routes, response_routes
-from .database import Base, engine
-from .models import survey, question, response, user, enumerator
+# Absolute imports for app modules
+from app.routes import survey_routes, voice_routes, analytics_routes, response_routes
+from app.database import Base, engine
+from app.models import survey, question, response, user, enumerator
 
 app = FastAPI(title="AI Smart Survey Tool")
+
 
 # CORS setup
 origins = [
