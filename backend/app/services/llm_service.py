@@ -57,7 +57,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
     try:
         try:
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -65,7 +65,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 temperature=0.7,
                 max_tokens=1000
             )
-            model_used = "gpt-4"
+            model_used = "gpt-4o"
         except Exception:
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -104,7 +104,6 @@ def generate_questions(prompt: str, num_questions: int = 5):
         error_str = str(e).lower()
         if "quota" in error_str or "insufficient_quota" in error_str or "429" in error_str:
             print("OpenAI API quota exceeded or rate limit hit:", e)
-            # return fallback or an error response
             return fallback_questions()
         else:
             print("OpenAI API error:", e)
