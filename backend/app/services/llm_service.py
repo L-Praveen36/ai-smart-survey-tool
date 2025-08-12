@@ -3,7 +3,6 @@ import json
 from ast import literal_eval
 import openai
 from dotenv import load_dotenv
-from openai import OpenAIError  # <-- Import here
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -79,7 +78,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
 
         return questions
 
-    except OpenAIError as oe:
+    except openai.OpenAIError as oe:
         print(f"OpenAI API error: {oe}")
         # fallback default with all extra fields
         return [
