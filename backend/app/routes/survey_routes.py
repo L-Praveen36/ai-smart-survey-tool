@@ -13,7 +13,6 @@ from app.services import nss_service, llm_service, analytics_service
 
 router = APIRouter()
 
-# Pydantic model for prompt (for /generate-from-prompt endpoint)
 class SurveyPromptPayload(BaseModel):
     prompt: str
     num_questions: int = 5
@@ -28,7 +27,6 @@ class SurveyPromptPayload(BaseModel):
     ai_generated: bool = True
     ai_metadata: Dict[str, Any] = {}
 
-# --- 1. Create Survey ---
 @router.post("/", response_model=SurveyResponse)
 def create_survey(
     payload: SurveyCreateRequest,
@@ -53,7 +51,6 @@ def create_survey(
         db.add(new_survey)
         db.commit()
         db.refresh(new_survey)
-        # NSS questions if type is nss
         if payload.survey_type == "nss" and payload.nss_template_type:
             nss_questions = nss_service.get_questions_from_template(payload.nss_template_type)
             for q in nss_questions:
@@ -83,7 +80,6 @@ def create_survey(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Survey creation failed: {str(e)}")
 
-# --- 2. Get Survey by ID ---
 @router.get("/{survey_id}", response_model=SurveyResponse)
 def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
     survey = db.query(Survey).filter(Survey.id == survey_id).first()
@@ -91,7 +87,6 @@ def get_survey(survey_id: int, db: Session = Depends(get_db)) -> SurveyResponse:
         raise HTTPException(status_code=404, detail="Survey not found")
     return survey
 
-# --- 3. Generate Survey from Prompt (AI/LLM) ---
 class SurveyPromptResult(BaseModel):
     survey_id: int
     title: str
@@ -104,12 +99,12 @@ def generate_from_prompt(
     db: Session = Depends(get_db)
 ) -> SurveyPromptResult:
     try:
-        # -- NEW: Generate questions using model fallback logic in llm_service --
+        # IMPORTANT: llm_service.generate_questions internally tries:
+        # model="gpt-4o-mini" first, then fallback to model="gpt-4.1-nano"
         questions = llm_service.generate_questions(
-            payload.prompt,
-            payload.num_questions
+            prompt=payload.prompt,
+            num_questions=payload.num_questions
         )
-        # Create Survey
         survey = Survey(
             title=payload.survey_title,
             description=payload.survey_description,
@@ -127,7 +122,6 @@ def generate_from_prompt(
         db.add(survey)
         db.commit()
         db.refresh(survey)
-        # Save generated questions
         saved_questions = []
         for idx, q in enumerate(questions):
             question = Question(
@@ -149,7 +143,6 @@ def generate_from_prompt(
             db.add(question)
             saved_questions.append(q["text"])
         db.commit()
-        # Return survey + generated questions
         return SurveyPromptResult(
             survey_id=survey.id,
             title=survey.title,
@@ -160,7 +153,6 @@ def generate_from_prompt(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"LLM-based survey generation failed: {str(e)}")
 
-# --- 4. Get Next Adaptive Question ---
 @router.get("/{survey_id}/adaptive", response_model=AdaptiveQuestionResponse)
 def get_next_adaptive_question(
     survey_id: int,
@@ -176,7 +168,6 @@ def get_next_adaptive_question(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Adaptive logic failed: {str(e)}")
 
-# --- 5. Get Respondent Progress ---
 @router.get("/{survey_id}/progress")
 def get_survey_progress(
     survey_id: int,

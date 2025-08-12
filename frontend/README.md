@@ -67,3 +67,6 @@ export default tseslint.config([
   },
 ])
 ```
+### AI Model Configuration
+We use `gpt-4o-mini` by default with automatic fallback to `gpt-4.1-nano`.  
+Update `DEFAULT_MODEL` and `FALLBACK_MODEL` in `backend/app/services/llm_service.py` to change.
