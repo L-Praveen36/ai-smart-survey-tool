@@ -20,9 +20,14 @@ const SurveyInterface = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGenerateSurvey = async () => {
-    setLoading(true);
-    setError(null);
+const handleGenerateSurvey = async () => {
+  if (!promptData || promptData.trim() === "") {
+    alert("Please enter a prompt before generating the survey.");
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/surveys`, {

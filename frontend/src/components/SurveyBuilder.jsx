@@ -12,10 +12,17 @@ const SurveyBuilder = () => {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const handleGenerateSurvey = async () => {
-  if (!title || !description || !prompt) {
-    alert('Please fill in all fields');
+  if (
+    !title.trim() ||
+    !description.trim() ||
+    !prompt.trim()
+  ) {
+    alert('Please fill in all fields (no empty spaces)');
     return;
   }
+  // ...rest of your code
+
+
 
   setLoading(true);
   try {
