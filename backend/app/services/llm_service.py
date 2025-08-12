@@ -3,6 +3,7 @@ import json
 from ast import literal_eval
 import openai
 from dotenv import load_dotenv
+from openai import InvalidRequestError, OpenAIError   # <-- Import here
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -38,7 +39,7 @@ def generate_questions(prompt: str, num_questions: int = 5):
                 max_tokens=1000
             )
             model_used = "gpt-4"
-        except openai.error.InvalidRequestError:
+        except InvalidRequestError:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -78,6 +79,36 @@ def generate_questions(prompt: str, num_questions: int = 5):
 
         return questions
 
+    except OpenAIError as oe:
+        print(f"OpenAI API error: {oe}")
+        # fallback default with all extra fields
+        return [
+            {
+                "text": "Default Question 1",
+                "type": "text",
+                "translations": {},
+                "audio_file_uri": None,
+                "voice_enabled": False,
+                "audio_metadata": {},
+                "adaptive_enabled": True,
+                "adaptive_config": {},
+                "ai_generated": True,
+                "ai_metadata": { "model": "default" }
+            },
+            {
+                "text": "Default Question 2",
+                "type": "radio",
+                "options": ["Yes", "No"],
+                "translations": {},
+                "audio_file_uri": None,
+                "voice_enabled": False,
+                "audio_metadata": {},
+                "adaptive_enabled": True,
+                "adaptive_config": {},
+                "ai_generated": True,
+                "ai_metadata": { "model": "default" }
+            }
+        ]
     except Exception as e:
         print(f"Error generating questions from LLM: {e}")
         # fallback default with all extra fields
