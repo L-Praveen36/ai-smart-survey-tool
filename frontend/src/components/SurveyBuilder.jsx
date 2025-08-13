@@ -175,66 +175,30 @@ const SurveyBuilder = () => {
 
       {/* Generated Survey */}
       {survey && survey.questions && survey.questions.length > 0 && (
-        <>
-          {console.log('Survey questions:', survey.questions)}
-          <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 className="text-xl font-semibold mb-3 text-gray-800">
-              📝 Generated Survey: {survey.title}
-            </h3>
-            <p className="mb-2 text-gray-600">{survey.description}</p>
-            <ul className="space-y-3">
-              {survey.questions.map((q, idx) => (
-                <li
-                  key={idx}
-                  className="bg-white p-3 rounded-md shadow-sm border flex flex-col"
-                >
-                  <span className="font-bold text-blue-700 mb-1">
-                    {
-                      // Use the first selected language, fallback to text/question_text
-                      q.translations?.[languages[0]] ||
-                      q.text ||
-                      q.question_text ||
-                      'Question text missing'
-                    }
-                  </span>
-
-                  {/* Feature badges */}
-                  <div className="flex gap-2 items-center mb-1">
-                    {q.ai_generated && (
-                      <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">
-                        🤖 AI
-                      </span>
-                    )}
-                    {q.voice_enabled && (
-                      <span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-xs font-bold">
-                        🎙️ Voice
-                      </span>
-                    )}
-                    {q.adaptive_enabled && (
-                      <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold">
-                        ⚡ Adaptive
-                      </span>
-                    )}
-                    {(q.type || q.question_type) && (
-                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
-                        {q.type || q.question_type}
-                      </span>
-                    )}
+        <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 className="text-xl font-semibold mb-3 text-gray-800">
+            📝 Generated Survey: {survey.title}
+          </h3>
+          <p className="mb-2 text-gray-600">{survey.description}</p>
+          <ul className="space-y-3">
+            {survey.questions.map((q, idx) => (
+              <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
+                <span className="font-bold text-blue-700 mb-1">
+                  {/* Always show question text */}
+                  {q.text || q.question_text || 'Question text missing'}
+                </span>
+                {/* Feature badges and options as before */}
+                {q.options && Array.isArray(q.options) && q.options.length > 0 && (
+                  <div className="mt-2 flex gap-2">
+                    {q.options.map((opt, i) => (
+                      <button key={i} className="px-3 py-1 bg-gray-100 rounded">{opt}</button>
+                    ))}
                   </div>
-
-                  {/* Options */}
-                  {q.options && Array.isArray(q.options) && (
-                    <div className="mt-2 flex gap-2">
-                      {q.options.map((opt, i) => (
-                        <button key={i} className="px-3 py-1 bg-gray-100 rounded">{opt}</button>
-                      ))}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Debug: Show the entire survey object */}
