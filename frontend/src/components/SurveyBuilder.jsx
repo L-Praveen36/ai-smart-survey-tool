@@ -236,6 +236,11 @@ const SurveyBuilder = () => {
           </div>
         </>
       )}
+
+      {/* Debug: Show the entire survey object */}
+      {survey && (
+        <pre>{JSON.stringify(survey, null, 2)}</pre>
+      )}
     </div>
   );
 };
