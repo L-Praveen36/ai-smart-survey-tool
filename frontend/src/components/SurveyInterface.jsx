@@ -1,8 +1,10 @@
 import React from 'react';
+import copy from 'copy-to-clipboard'; // Import copy-to-clipboard
 
 const SurveyInterface = ({ survey, onBack }) => {
   const [selectedLang, setSelectedLang] = React.useState(survey.languages?.[0] || 'en');
   const [answers, setAnswers] = React.useState({});
+  const [copySuccess, setCopySuccess] = React.useState(false); // State for copy success message
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prev => ({
@@ -13,6 +15,29 @@ const SurveyInterface = ({ survey, onBack }) => {
 
   const getQuestionText = (question) => {
     return question.translations?.[selectedLang] || question.text;
+  };
+
+  const handleCopyToClipboard = () => {
+    if (survey) {
+      copy(JSON.stringify(survey, null, 2));
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+    }
+  };
+
+  const handleDownloadSurvey = () => {
+    if (survey) {
+      const filename = `survey_${survey.title.replace(/\s+/g, '_').toLowerCase()}.json`;
+      const jsonStr = JSON.stringify(survey, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -106,6 +131,21 @@ const SurveyInterface = ({ survey, onBack }) => {
           </div>
         ))}
       </div>
+      <button
+        onClick={handleCopyToClipboard}
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Copy
+      </button>
+      {copySuccess && (
+        <p className="text-green-500 mt-2">Copied to clipboard!</p>
+      )}
+      <button
+        onClick={handleDownloadSurvey}
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Download
+      </button>
     </div>
   );
 };

@@ -13,6 +13,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "axios": "^1.11.0",
+    "copy-to-clipboard": "^3.3.3",
     "framer-motion": "^12.23.12",
     "i18next": "^25.3.2",
     "react": "^19.1.0",
