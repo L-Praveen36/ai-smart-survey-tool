@@ -128,3 +128,12 @@ class SubmitResponseResult(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --------------------------
+# Survey Creation (Alternative)
+# --------------------------
+class SurveyCreate(BaseModel):
+    title: str
+    description: str
+    questions: List[Dict[str, Any]]
+    answers: List[Dict[str, Any]]
