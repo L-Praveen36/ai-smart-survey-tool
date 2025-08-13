@@ -194,10 +194,8 @@ const SurveyBuilder = () => {
                 className="bg-white p-3 rounded-md shadow-sm border flex flex-col"
               >
                 <span className="font-bold text-blue-700 mb-1">
-                  {q?.translations?.[languages[0]] ||
-                    q?.text ||
-                    q?.question_text ||
-                    'Question text missing'}
+                  {/* Try all possible keys for question text */}
+                  {q.translations?.[selectedLanguage] || q.text || q.question_text || 'Question text missing'}
                 </span>
 
                 {/* Feature badges */}
@@ -225,9 +223,11 @@ const SurveyBuilder = () => {
                 </div>
 
                 {/* Options */}
-                {q.options && q.options.length > 0 && (
-                  <div className="text-sm text-gray-600">
-                    Options: {q.options.join(', ')}
+                {q.options && Array.isArray(q.options) && (
+                  <div className="mt-2 flex gap-2">
+                    {q.options.map((opt, i) => (
+                      <button key={i} className="px-3 py-1 bg-gray-100 rounded">{opt}</button>
+                    ))}
                   </div>
                 )}
               </li>
