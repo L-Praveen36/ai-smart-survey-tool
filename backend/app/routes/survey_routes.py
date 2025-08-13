@@ -2,14 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-from datetime import datetime  # Import datetime
-import json  # Import json
 
 from app.database import get_db
 from app.models.survey import Survey
 from app.models.question import Question
 from app.models.response import Response
-from app.schemas import SurveyCreateRequest, SurveyResponse, AdaptiveQuestionResponse, SurveyCreate  # Import SurveyCreate
+from app.schemas import SurveyCreateRequest, SurveyResponse, AdaptiveQuestionResponse
 from app.services import nss_service, llm_service, analytics_service
 
 router = APIRouter()
@@ -220,26 +218,3 @@ def get_survey_progress(survey_id: int, respondent_id: str, db: Session = Depend
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching progress: {str(e)}")
-
-# --------- Save Survey ---------
-@router.post("/surveys/save")
-async def save_survey(survey_data: SurveyCreate, db: Session = Depends(get_db)):
-    try:
-        # Create new survey record
-        db_survey = Survey(
-            title=survey_data.title,
-            description=survey_data.description,
-            questions=json.dumps(survey_data.questions),
-            answers=json.dumps(survey_data.answers),
-            created_at=datetime.utcnow()
-        )
-
-        # Add to database (using SQLAlchemy)
-        db.add(db_survey)
-        db.commit()
-        db.refresh(db_survey)
-
-        return {"message": "Survey saved successfully", "id": db_survey.id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))

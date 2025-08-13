@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -11,10 +11,6 @@ class Survey(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text)
-    questions = Column(Text)  # JSON string
-    answers = Column(Text, nullable=True)  # JSON string
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # If you add user auth later
     survey_type = Column(String(50))
     nss_template_type = Column(String(50), nullable=True)
     languages = Column(JSON, default=list)              # Multilingual support
@@ -26,19 +22,21 @@ class Survey(Base):
     ai_generated = Column(Boolean, default=False)       # LLM/AI survey flag
     ai_metadata = Column(JSON, default=dict)            # AI prompt/context/history
     status = Column(String(50), default="draft")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    creator = relationship("User", foreign_keys=[user_id])
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    creator = relationship("User", foreign_keys=[created_by])
 
-    questions_rel = relationship(
+    questions = relationship(
         "Question",
         back_populates="survey",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
     enumerators = relationship(
-        "EnumeratorAssignment",
-        back_populates="survey",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
+    "EnumeratorAssignment",
+    back_populates="survey",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
+)
 
