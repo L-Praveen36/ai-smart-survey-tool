@@ -55,3 +55,8 @@
   font-size: 1em;
   margin-top: 1.5em;
 }
+
+.question-text {
+    color: black; /* Ensure the text is visible */
+    display: block; /* Ensure it's displayed as a block element */
+}

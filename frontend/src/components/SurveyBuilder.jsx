@@ -184,8 +184,9 @@ const SurveyBuilder = () => {
             {survey.questions.map((q, idx) => (
               <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
                 <span className="font-bold text-blue-700 mb-1">
-                  {/* Always show question text */}
-                  {q.text || q.question_text || 'Question text missing'}
+                  <div className="question-text">
+                    {q.text || q.question_text || 'Question text missing'}
+                  </div>
                 </span>
                 {/* Feature badges and options as before */}
                 {q.options && Array.isArray(q.options) && q.options.length > 0 && (
