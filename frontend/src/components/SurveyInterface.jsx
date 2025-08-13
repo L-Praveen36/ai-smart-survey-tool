@@ -1,10 +1,11 @@
 import React from 'react';
-import copy from 'copy-to-clipboard'; // Import copy-to-clipboard
+import copy from 'copy-to-clipboard';
+import { jsPDF } from 'jspdf'; // Import jsPDF
 
 const SurveyInterface = ({ survey, onBack }) => {
   const [selectedLang, setSelectedLang] = React.useState(survey.languages?.[0] || 'en');
   const [answers, setAnswers] = React.useState({});
-  const [copySuccess, setCopySuccess] = React.useState(false); // State for copy success message
+  const [copySuccess, setCopySuccess] = React.useState(false);
 
   const handleAnswerChange = (questionId, value) => {
     setAnswers(prev => ({
@@ -21,22 +22,42 @@ const SurveyInterface = ({ survey, onBack }) => {
     if (survey) {
       copy(JSON.stringify(survey, null, 2));
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setCopySuccess(false), 2000);
     }
   };
 
   const handleDownloadSurvey = () => {
     if (survey) {
-      const filename = `survey_${survey.title.replace(/\s+/g, '_').toLowerCase()}.json`;
-      const jsonStr = JSON.stringify(survey, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const doc = new jsPDF();
+      let y = 20;
+
+      doc.setFontSize(20);
+      doc.text(survey.title || 'Survey Form', 20, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.text(survey.description || '', 20, y);
+      y += 20;
+
+      survey.questions?.forEach((question) => {
+        doc.setFontSize(14);
+        doc.text(`Q${question.id}: ${getQuestionText(question)}`, 20, y);
+        y += 10;
+
+        if (question.type === 'multiple_choice' || question.type === 'checkbox' || question.type === 'yes_no') {
+          question.options?.forEach((option) => {
+            doc.setFontSize(12);
+            doc.text(`- ${option}`, 30, y);
+            y += 7;
+          });
+        } else if (question.type === 'text') {
+          doc.setFontSize(12);
+          doc.text('Answer:', 30, y);
+          y += 7;
+        }
+        y += 5;
+      });
+
+      doc.save(`survey_${survey.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     }
   };
 
@@ -127,6 +148,31 @@ const SurveyInterface = ({ survey, onBack }) => {
                 value={answers[question.id] || ''}
                 onChange={(e) => handleAnswerChange(question.id, e.target.value)}
               />
+            )}
+
+            {question.type === 'yes_no' && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name={`q${question.id}`}
+                    value="yes"
+                    checked={answers[question.id] === 'yes'}
+                    onChange={() => handleAnswerChange(question.id, 'yes')}
+                  />
+                  Yes
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name={`q${question.id}`}
+                    value="no"
+                    checked={answers[question.id] === 'no'}
+                    onChange={() => handleAnswerChange(question.id, 'no')}
+                  />
+                  No
+                </label>
+              </div>
             )}
           </div>
         ))}
