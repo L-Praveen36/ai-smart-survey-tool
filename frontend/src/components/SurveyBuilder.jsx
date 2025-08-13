@@ -18,6 +18,7 @@ const SurveyBuilder = () => {
   const [languages, setLanguages] = useState(['en']);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [adaptiveEnabled, setAdaptiveEnabled] = useState(true);
+  const [survey, setSurvey] = useState(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -48,10 +49,8 @@ const SurveyBuilder = () => {
         }
       );
 
-      // Debugging log to inspect the questions received from API
-      console.log('QUESTIONS FROM API:', response.data.questions);
-
-      setQuestions(response.data.questions || []);
+      // Store the full survey object
+      setSurvey(response.data);
 
       if (!response.data.questions || response.data.questions.length === 0) {
         alert('No questions generated. Please check your prompt or backend.');
@@ -181,19 +180,19 @@ const SurveyBuilder = () => {
         {loading ? 'Generating...' : 'Generate Survey'}
       </button>
 
-      {/* Generated Questions */}
-      {questions.length > 0 && (
+      {/* Generated Survey */}
+      {survey && survey.questions && survey.questions.length > 0 && (
         <div className="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
           <h3 className="text-xl font-semibold mb-3 text-gray-800">
-            📝 Generated Questions:
+            📝 Generated Survey: {survey.title}
           </h3>
+          <p className="mb-2 text-gray-600">{survey.description}</p>
           <ul className="space-y-3">
-            {questions.map((q, idx) => (
+            {survey.questions.map((q, idx) => (
               <li
                 key={idx}
                 className="bg-white p-3 rounded-md shadow-sm border flex flex-col"
               >
-                {/* Always display question text, prefer translation if available */}
                 <span className="font-bold text-blue-700 mb-1">
                   {q?.translations?.[languages[0]] ||
                     q?.text ||
