@@ -32,5 +32,5 @@ export async function generateSurveyFromPrompt({
   }
 
   const data = await response.json();
-  return data.questions || [];
+  return data; // <-- Return the full survey object, not just questions
 }
