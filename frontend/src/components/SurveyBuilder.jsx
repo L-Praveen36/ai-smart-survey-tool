@@ -194,8 +194,13 @@ const SurveyBuilder = () => {
                 className="bg-white p-3 rounded-md shadow-sm border flex flex-col"
               >
                 <span className="font-bold text-blue-700 mb-1">
-                  {/* Try all possible keys for question text */}
-                  {q.translations?.[selectedLanguage] || q.text || q.question_text || 'Question text missing'}
+                  {
+                    // Use the first selected language, fallback to text/question_text
+                    q.translations?.[languages[0]] ||
+                    q.text ||
+                    q.question_text ||
+                    'Question text missing'
+                  }
                 </span>
 
                 {/* Feature badges */}
