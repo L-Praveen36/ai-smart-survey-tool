@@ -1,4 +1,4 @@
-import{ useState } from 'react';
+import { useState } from 'react';
 import SurveyInterface from './components/SurveyInterface';
 
 const DEFAULT_LANG = 'en';

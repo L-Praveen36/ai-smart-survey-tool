@@ -181,23 +181,24 @@ const SurveyBuilder = () => {
           </h3>
           <p className="mb-2 text-gray-600">{survey.description}</p>
           <ul className="space-y-3">
-            {survey.questions.map((q, idx) => (
-              <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
-                <span className="font-bold text-blue-700 mb-1">
-                  <div className="question-text">
+            {survey.questions.map((q, idx) => {
+              console.log("Question:", q); // Add this line
+              return (
+                <li key={idx} className="bg-white p-3 rounded-md shadow-sm border flex flex-col">
+                  <span className="font-bold text-blue-700 mb-1">
                     {q.text || q.question_text || 'Question text missing'}
-                  </div>
-                </span>
-                {/* Feature badges and options as before */}
-                {q.options && Array.isArray(q.options) && q.options.length > 0 && (
-                  <div className="mt-2 flex gap-2">
-                    {q.options.map((opt, i) => (
-                      <button key={i} className="px-3 py-1 bg-gray-100 rounded">{opt}</button>
-                    ))}
-                  </div>
-                )}
-              </li>
-            ))}
+                  </span>
+                  {/* Feature badges and options as before */}
+                  {q.options && Array.isArray(q.options) && q.options.length > 0 && (
+                    <div className="mt-2 flex gap-2">
+                      {q.options.map((opt, i) => (
+                        <button key={i} className="px-3 py-1 bg-gray-100 rounded">{opt}</button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
