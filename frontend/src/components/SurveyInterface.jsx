@@ -1,6 +1,6 @@
 import React from 'react';
 import copy from 'copy-to-clipboard';
-import { jsPDF } from 'jspdf'; // Import jsPDF
+import { jsPDF } from 'jspdf';
 
 const SurveyInterface = ({ survey, onBack }) => {
   const [selectedLang, setSelectedLang] = React.useState(survey.languages?.[0] || 'en');
@@ -30,6 +30,14 @@ const SurveyInterface = ({ survey, onBack }) => {
     if (survey) {
       const doc = new jsPDF();
       let y = 20;
+      const pageHeight = doc.internal.pageSize.height;
+
+      const addPageIfNeeded = (spaceNeeded = 10) => {
+        if (y + spaceNeeded > pageHeight - 10) {
+          doc.addPage();
+          y = 20;
+        }
+      };
 
       doc.setFontSize(20);
       doc.text(survey.title || 'Survey Form', 20, y);
@@ -39,25 +47,113 @@ const SurveyInterface = ({ survey, onBack }) => {
       y += 20;
 
       survey.questions?.forEach((question) => {
+        addPageIfNeeded(15);
         doc.setFontSize(14);
         doc.text(`Q${question.id}: ${getQuestionText(question)}`, 20, y);
         y += 10;
 
-        if (question.type === 'multiple_choice' || question.type === 'checkbox' || question.type === 'yes_no') {
+        const userAnswer = answers[question.id];
+
+        if (['multiple_choice', 'checkbox', 'yes_no', 'radio'].includes(question.type)) {
           question.options?.forEach((option) => {
+            addPageIfNeeded(7);
+            const isSelected = Array.isArray(userAnswer)
+              ? userAnswer.includes(option)
+              : userAnswer === option;
             doc.setFontSize(12);
-            doc.text(`- ${option}`, 30, y);
+            doc.text(`${isSelected ? '[x]' : '[ ]'} ${option}`, 30, y);
             y += 7;
           });
         } else if (question.type === 'text') {
+          addPageIfNeeded(7);
           doc.setFontSize(12);
-          doc.text('Answer:', 30, y);
+          doc.text(`Answer: ${userAnswer || ''}`, 30, y);
           y += 7;
         }
         y += 5;
       });
 
       doc.save(`survey_${survey.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+    }
+  };
+
+  const renderQuestion = (question) => {
+    switch (question.type) {
+      case 'multiple_choice':
+      case 'radio':
+        return (
+          <div className="space-y-2">
+            {question.options?.map((option, i) => (
+              <label key={i} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name={`q${question.id}`}
+                  checked={answers[question.id] === option}
+                  onChange={() => handleAnswerChange(question.id, option)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div className="space-y-2">
+            {question.options?.map((option, i) => (
+              <label key={i} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={answers[question.id]?.includes(option)}
+                  onChange={(e) => {
+                    const newValue = e.target.checked
+                      ? [...(answers[question.id] || []), option]
+                      : (answers[question.id] || []).filter(v => v !== option);
+                    handleAnswerChange(question.id, newValue);
+                  }}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'yes_no':
+        return (
+          <div className="space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name={`q${question.id}`}
+                value="yes"
+                checked={answers[question.id] === 'yes'}
+                onChange={() => handleAnswerChange(question.id, 'yes')}
+              />
+              Yes
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name={`q${question.id}`}
+                value="no"
+                checked={answers[question.id] === 'no'}
+                onChange={() => handleAnswerChange(question.id, 'no')}
+              />
+              No
+            </label>
+          </div>
+        );
+
+      case 'text':
+      default:
+        return (
+          <textarea
+            className="w-full p-2 border rounded"
+            rows={3}
+            value={answers[question.id] || ''}
+            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+          />
+        );
     }
   };
 
@@ -104,94 +200,28 @@ const SurveyInterface = ({ survey, onBack }) => {
                 </span>
               )}
             </div>
-
-            {question.type === 'multiple_choice' && (
-              <div className="space-y-2">
-                {question.options?.map((option, i) => (
-                  <label key={i} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name={`q${question.id}`}
-                      checked={answers[question.id] === option}
-                      onChange={() => handleAnswerChange(question.id, option)}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {question.type === 'checkbox' && (
-              <div className="space-y-2">
-                {question.options?.map((option, i) => (
-                  <label key={i} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={answers[question.id]?.includes(option)}
-                      onChange={(e) => {
-                        const newValue = e.target.checked
-                          ? [...(answers[question.id] || []), option]
-                          : (answers[question.id] || []).filter(v => v !== option);
-                        handleAnswerChange(question.id, newValue);
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {question.type === 'text' && (
-              <textarea
-                className="w-full p-2 border rounded"
-                rows={3}
-                value={answers[question.id] || ''}
-                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-              />
-            )}
-
-            {question.type === 'yes_no' && (
-              <div className="space-y-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name={`q${question.id}`}
-                    value="yes"
-                    checked={answers[question.id] === 'yes'}
-                    onChange={() => handleAnswerChange(question.id, 'yes')}
-                  />
-                  Yes
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name={`q${question.id}`}
-                    value="no"
-                    checked={answers[question.id] === 'no'}
-                    onChange={() => handleAnswerChange(question.id, 'no')}
-                  />
-                  No
-                </label>
-              </div>
-            )}
+            {renderQuestion(question)}
           </div>
         ))}
       </div>
-      <button
-        onClick={handleCopyToClipboard}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      >
-        Copy
-      </button>
-      {copySuccess && (
-        <p className="text-green-500 mt-2">Copied to clipboard!</p>
-      )}
-      <button
-        onClick={handleDownloadSurvey}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      >
-        Download
-      </button>
+
+      <div className="flex gap-4 mt-6">
+        <button
+          onClick={handleCopyToClipboard}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Copy
+        </button>
+        {copySuccess && (
+          <p className="text-green-500 mt-2">Copied to clipboard!</p>
+        )}
+        <button
+          onClick={handleDownloadSurvey}
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Download
+        </button>
+      </div>
     </div>
   );
 };
